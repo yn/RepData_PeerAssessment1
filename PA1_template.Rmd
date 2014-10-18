@@ -7,19 +7,78 @@ output:
 
 
 ## Loading and preprocessing the data
+```{r}
+library(data.table)
+DT = fread("activity.csv")[,date:=as.Date(date)]
+```
+## What is the mean and total number of steps taken per day?
+### Histogram of total steps for each day
+```{r}
+library(ggplot2)
+sum_stats = na.omit(DT[,list(sum=sum(steps)), by=date])
+ggplot(sum_stats, aes(date, sum)) + geom_bar(stat="identity")
+```
 
-
-
-## What is mean total number of steps taken per day?
-
-
+### Table of mean and median steps for each day
+```{r}
+center_stats = DT[,list(mean=mean(steps), median=as.double(median(steps))), by=date]
+print(center_stats)
+```
 
 ## What is the average daily activity pattern?
+### Time Series Plot
+```{r}
+center_stats = DT[,list(mean=mean(steps, na.rm=TRUE)), by=interval]
+ggplot(center_stats, aes(interval, mean)) + geom_line()
+```
 
-
+### Time interval with maximum mean number of steps
+```{r}
+center_stats_max = center_stats[mean==max(mean)]
+with(center_stats_max, print(sprintf("max mean is %f at 5-minute interval %g", mean, interval)))
+```
 
 ## Imputing missing values
 
+### The number of rows with NA:
+```{r}
+nrow(DT[is.na(steps)])
+```
+
+### The strategy for filling out the missing number of steps for an interval on a given day will be to take the mean value for that interval across all days.
+```{r, results='hide'}
+DT[,c("steps_raw", "steps") := list(steps, as.double(steps))][is.na(steps), steps := center_stats$mean]
+```
+
+### Histogram of total steps for each day after missing values were imputed
+```{r}
+sum_stats = na.omit(DT[,list(sum=sum(steps)), by=date])
+ggplot(sum_stats, aes(date, sum)) + geom_bar(stat="identity")
+```
+
+### Print table of median and mean for each day before and after imputing
+
+We inserted the mean value across all days as the imputed value for a given interval. This means that for days that already had values, their mean and median hasn't changed, as illustrated by all the zeroes in the `mean_diff` and `median_diff` columns.
 
 
-## Are there differences in activity patterns between weekdays and weekends?
+```{r}
+options(width=119)
+center_stats = DT[,list(mean=mean(steps), median=as.double(median(steps)), mean_raw=mean(steps_raw), median_raw = as.double(median(steps_raw))), by=date][,c("mean_diff", "median_diff") := list(mean - mean_raw, median - median_raw)]
+print(center_stats)
+```
+
+## Are there differences in activity patterns between weekdays and weekends? YES!
+
+### Create a new weekday/weekend factor variable
+```{r, results='hide'}
+weekend = c("Saturday", "Sunday")
+levels = c(FALSE,TRUE)
+labels = c("weekday", "weekend")
+DT[,w:=factor(weekdays(date) %in% weekend, levels, labels)]
+```
+
+### Graph weekday vs. weekend
+```{r, results='hide'}
+center_stats = DT[,list(mean=mean(steps, na.rm=TRUE)), by=c("interval","w")]
+ggplot(center_stats, aes(interval, mean)) + geom_line() + facet_grid(w ~ .)
+```
