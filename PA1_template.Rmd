@@ -63,8 +63,12 @@ We inserted the mean value across all days as the imputed value for a given inte
 
 ```{r}
 options(width=119)
-center_stats = DT[,list(mean=mean(steps), median=as.double(median(steps)), mean_raw=mean(steps_raw), median_raw = as.double(median(steps_raw))), by=date][,c("mean_diff", "median_diff") := list(mean - mean_raw, median - median_raw)]
-print(center_stats)
+center_stats = DT[,list(mean=mean(steps), 
+                        median=as.double(median(steps)), 
+                        mean_raw=mean(steps_raw), 
+                        median_raw=as.double(median(steps_raw))), by=date]
+
+center_stats[,c("mean_diff","median_diff"):=list(mean-mean_raw,median-median_raw)]
 ```
 
 ## Are there differences in activity patterns between weekdays and weekends? YES!

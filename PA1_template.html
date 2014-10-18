@@ -175,8 +175,12 @@ ggplot(sum_stats, aes(date, sum)) + geom_bar(stat=&quot;identity&quot;)</code></
 <h3>Print table of median and mean for each day before and after imputing</h3>
 <p>We inserted the mean value across all days as the imputed value for a given interval. This means that for days that already had values, their mean and median hasn’t changed, as illustrated by all the zeroes in the <code>mean_diff</code> and <code>median_diff</code> columns.</p>
 <pre class="r"><code>options(width=119)
-center_stats = DT[,list(mean=mean(steps), median=as.double(median(steps)), mean_raw=mean(steps_raw), median_raw = as.double(median(steps_raw))), by=date][,c(&quot;mean_diff&quot;, &quot;median_diff&quot;) := list(mean - mean_raw, median - median_raw)]
-print(center_stats)</code></pre>
+center_stats = DT[,list(mean=mean(steps), 
+                        median=as.double(median(steps)), 
+                        mean_raw=mean(steps_raw), 
+                        median_raw=as.double(median(steps_raw))), by=date]
+
+center_stats[,c(&quot;mean_diff&quot;,&quot;median_diff&quot;):=list(mean-mean_raw,median-median_raw)]</code></pre>
 <pre><code>##           date       mean   median   mean_raw median_raw mean_diff median_diff
 ##  1: 2012-10-01 37.3825996 34.11321         NA         NA        NA          NA
 ##  2: 2012-10-02  0.4375000  0.00000  0.4375000          0         0           0
